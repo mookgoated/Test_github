@@ -4,9 +4,168 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden; 
+            animation: rainbowSwitch 12s infinite linear;
+        }
+
+        @keyframes rainbowSwitch {
+            0%   { background-color: #FF0000; }
+            17%  { background-color: #FFA500; }
+            33%  { background-color: #FFFF00; }
+            50%  { background-color: #008000; }
+            67%  { background-color: #0000FF; }
+            83%  { background-color: #4B0082; }
+            100% { background-color: #EE82EE; }
+        }
+
+        .bouncing-container {
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            z-index: 5;
+        }
+
+        .spinning-image {
+            width: 100%;
+            height: 100%;
+            animation: spin 2.5s infinite linear; 
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .title-container {
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello World (ˉ﹃ˉ)</h1>
-    <img src="https://i.pinimg.com/736x/51/dd/9b/51dd9b00c507c4325b090fc61bdbc19e.jpg" alt="drooling cat">
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="title-container">
+        <h1 style="font-size: 60px;" align="center">Hello World (ˉ﹃ˉ)</h1>
+    </div>
+
+    <div class="bouncing-container">
+        <img class="spinning-image" src="https://i.pinimg.com/originals/22/91/e2/2291e2559e9915f544fc12d8c96324ce.gif" alt="Image 1">
+    </div>
+
+    <div class="bouncing-container">
+        <img class="spinning-image" src="https://i.pinimg.com/originals/c8/3b/c5/c83bc53de7fdb2a9f8124a0ed93567d8.gif" alt="Image 2">
+    </div>
+
+<script>
+    const elements = document.querySelectorAll('.bouncing-container');
+    const speed = 4; 
+
+    const items = Array.from(elements).map((el, index) => {
+        return {
+            element: el,
+            x: index * 150,
+            y: index * 150,
+            dirX: Math.random() < 0.5 ? 1 : -1,
+            dirY: Math.random() < 0.5 ? 1 : -1
+        };
+    });
+
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let maxConfetti = 50;
+    const confettiColors = ['#E63946', '#F1FAEE', '#A8DADC', '#457B9D', '#1D3557', '#FFB703', '#FB8500'];
+    const confettiPieces = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function createConfettiPiece() {
+        return {
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            size: Math.random() * 8 + 5,
+            color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+            speedY: Math.random() * 3 + 2,
+            speedX: Math.random() * 2 - 1,
+            rotation: Math.random() * 360,
+            rotationSpeed: Math.random() * 4 - 2
+        };
+    }
+
+    for (let i = 0; i < maxConfetti; i++) {
+        confettiPieces.push(createConfettiPiece());
+        confettiPieces[i].y = Math.random() * canvas.height;
+    }
+
+    function animate() {
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+
+        items.forEach(item => {
+            const width = item.element.clientWidth;
+            const height = item.element.clientHeight;
+
+            if (item.x + width >= screenWidth || item.x <= 0) item.dirX *= -1;
+            if (item.y + height >= screenHeight || item.y <= 0) item.dirY *= -1;
+
+            item.x += item.dirX * speed;
+            item.y += item.dirY * speed;
+
+            item.element.style.left = item.x + 'px';
+            item.element.style.top = item.y + 'px';
+        });
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        confettiPieces.forEach(p => {
+            p.y += p.speedY;
+            p.x += p.speedX;
+            p.rotation += p.rotationSpeed;
+
+            if (p.y > canvas.height) {
+                p.y = -20;
+                p.x = Math.random() * canvas.width;
+                p.speedY = Math.random() * 3 + 2;
+            }
+
+            ctx.save();
+            ctx.translate(p.x + p.size / 2, p.y + p.size / 2);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            ctx.restore();
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+</script>
+
 </body>
 </html>
